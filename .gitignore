@@ -1,1 +1,9 @@
 silesia/
+resultados/
+build/
+
+*.py
+*.ppm
+*.txt
+*.csv
+*.o
