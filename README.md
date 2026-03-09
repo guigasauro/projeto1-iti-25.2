@@ -1,6 +1,6 @@
 # PPM-C — Compressor Adaptativo com Codificação Aritmética
 
-Implementação do algoritmo **PPM-C** (*Prediction by Partial Matching, Method C*) com codificação aritmética de precisão inteira. Desenvolvido como projeto da disciplina de ITI — UFPB 2025.2.
+Implementação do algoritmo **PPM-C** (*Prediction by Partial Matching, Method C*) com codificação aritmética de precisão inteira.
 
 ---
 
@@ -8,7 +8,6 @@ Implementação do algoritmo **PPM-C** (*Prediction by Partial Matching, Method 
 
 - Compilador C++17 (`g++` ≥ 7 ou `clang++` ≥ 5)
 - `make`
-- Python 3.10+ (apenas para os scripts de experimento)
 
 ---
 
@@ -170,13 +169,3 @@ Kmax | Bits/sym | Comprimido(B) | Razão%  | T.enc(s) | T.dec(s)
    5 |   2.5951 |       3311040 |  32.49% |    4.821 |   4.103
    6 |   2.5630 |       3270080 |  32.08% |    6.234 |   5.412
 ```
-
----
-
-## Notas sobre os parâmetros
-
-**Kmax**: valores entre 5 e 7 costumam dar a melhor compressão para texto. Valores muito altos (≥ 9) raramente melhoram, pois os contextos longos são visitados poucas vezes e a probabilidade de escape aumenta.
-
-**Reset adaptativo**: beneficia arquivos com mudanças abruptas de características (e.g., corpus concatenados com tipos de arquivo heterogêneos). Para arquivos homogêneos, o overhead de sinalização pode superar o ganho.
-
-**Janela / Limiar**: janelas menores (100–500) detectam mudanças mais rápido mas são mais ruidosas. Um limiar de 10–20% é um bom ponto de partida.

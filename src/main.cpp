@@ -1,14 +1,3 @@
-// =============================================================================
-// PPM-C com Codificação Aritmética — Trabalho ITI 2025.2
-// Prof. Leonardo — UFPB
-//
-// Características:
-//   • Alfabeto de bytes {0..255}
-//   • Kmax configurável de 0 a 10
-//   • Método C com mecanismo de EXCLUSÃO completo
-//   • Monitoramento de taxa local por janelas + Reset adaptativo
-//   • Sinal de reset embutido no bitstream para sincronia do decoder
-//   • Header de 6 bytes no arquivo comprimido
 //
 // Compilar:  make   (ou: g++ -std=c++17 -O2 -o ppm main.cpp bitio.cpp arith.cpp ppm.cpp codec.cpp fileio.cpp)
 //
@@ -29,9 +18,6 @@
 #include "codec.hpp"
 #include "fileio.hpp"
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MAIN
-// ─────────────────────────────────────────────────────────────────────────────
 void printUsage(const char* prog) {
     std::cerr
         << "Uso:\n"
@@ -74,7 +60,7 @@ int main(int argc, char* argv[]) {
         auto t1  = std::chrono::high_resolution_clock::now();
         double dt = std::chrono::duration<double>(t1 - t0).count();
 
-        // Monta arquivo de saída com header
+        // Prefixa o bitstream com o cabeçalho de 6 bytes e grava o arquivo
         std::vector<uint8_t> out;
         writeHeader(out, (uint32_t)input.size(), kmax, use_reset);
         out.insert(out.end(), res.compressed.begin(), res.compressed.end());
@@ -94,7 +80,7 @@ int main(int argc, char* argv[]) {
         std::cout << "Taxa de compressão: " << ratio << "%\n";
         std::cout << "Tempo (encode):     " << dt << " s\n";
 
-        // Salva taxa progressiva em CSV para análise
+        // Salva taxa acumulada amostrada a cada 1000 símbolos
         if (!res.progressive.empty()) {
             std::string csv_path = fout + ".rate.csv";
             std::ofstream csv(csv_path);
@@ -104,12 +90,20 @@ int main(int argc, char* argv[]) {
             std::cout << "Taxa progressiva:   " << csv_path << "\n";
         }
 
+        // Salva a posição (em símbolos) de cada reset executado
+        if (!res.reset_positions.empty()) {
+            std::string rst_path = fout + ".reset.csv";
+            std::ofstream rst(rst_path);
+            rst << "n\n";
+            for (size_t pos : res.reset_positions)
+                rst << pos << "\n";
+            std::cout << "Posições de reset:  " << rst_path << "\n";
+        }
+
         return 0;
     }
 
-    // ════════════════════════════════════════════════════════════════════
     // DECODE
-    // ════════════════════════════════════════════════════════════════════
     if (cmd == "decode") {
         if (argc < 4) { printUsage(argv[0]); return 1; }
 
@@ -134,7 +128,7 @@ int main(int argc, char* argv[]) {
         std::cout << "Bytes escritos:     " << out.size() << "\n";
         std::cout << "Tempo (decode):     " << dt << " s\n";
 
-        // Verificação rápida de integridade
+        // Verifica se o número de bytes recuperados bate com o cabeçalho
         if (out.size() == hdr.orig_size)
             std::cout << "Integridade:        OK (tamanho correto)\n";
         else
@@ -143,9 +137,7 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    // ════════════════════════════════════════════════════════════════════
     // BENCH: tabela de Kmax 0..kmax_max
-    // ════════════════════════════════════════════════════════════════════
     if (cmd == "bench") {
         if (argc < 3) { printUsage(argv[0]); return 1; }
 

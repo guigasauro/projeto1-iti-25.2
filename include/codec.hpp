@@ -11,7 +11,8 @@ struct EncodeResult {
     uint64_t total_bits;
     double   avg_bps;        // bits por símbolo
     int      reset_count;
-    std::vector<double> progressive; // taxa acumulada a cada sample_step símbolos
+    std::vector<double> progressive;      // taxa acumulada a cada sample_step símbolos
+    std::vector<size_t> reset_positions;  // posição n (em símbolos) de cada reset
 };
 
 EncodeResult encode(const std::vector<uint8_t>& input,

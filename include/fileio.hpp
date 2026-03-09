@@ -3,9 +3,7 @@
 #include <vector>
 #include <cstdint>
 
-// ─────────────────────────────────────────────────────────────────────────────
 // LEITURA/ESCRITA DE ARQUIVOS
-// ─────────────────────────────────────────────────────────────────────────────
 std::vector<uint8_t> readFile(const std::string& path);
 void writeFile(const std::string& path, const std::vector<uint8_t>& data);
 

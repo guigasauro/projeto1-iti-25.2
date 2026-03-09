@@ -4,9 +4,6 @@
 #include "monitor.hpp"
 #include <algorithm>
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ENCODE
-// ─────────────────────────────────────────────────────────────────────────────
 EncodeResult encode(const std::vector<uint8_t>& input,
                     int    kmax,
                     int    window_size,
@@ -24,6 +21,7 @@ EncodeResult encode(const std::vector<uint8_t>& input,
     int reset_count = 0;
     bool pending_reset = false; // reset a ser emitido no início do próximo símbolo
     std::vector<double> progressive;
+    std::vector<size_t> reset_positions;
 
     for (size_t i = 0; i < input.size(); i++) {
         uint8_t sym = input[i];
@@ -46,6 +44,7 @@ EncodeResult encode(const std::vector<uint8_t>& input,
             ac.encode(rsp);
             ppm.reset();
             reset_count++;
+            reset_positions.push_back(i); // posição do símbolo que vem logo após o reset
             pending_reset = false;
         }
 
@@ -58,7 +57,7 @@ EncodeResult encode(const std::vector<uint8_t>& input,
             ByteCtx c    = ppm.ctx(ord);
             auto    prob = ppm.getProb(ord, c, (int)sym, excluded);
 
-            if (!prob.has_value()) continue; // contexto não existe → desce
+            if (!prob.has_value()) continue; // contexto inexistente → desce para ordem inferior
 
             auto prob_esc = ppm.getProb(ord, c, -1, excluded);
             bool is_escape = !prob_esc.has_value() ||
@@ -99,8 +98,9 @@ EncodeResult encode(const std::vector<uint8_t>& input,
     res.compressed  = std::move(bw.buf);
     res.total_bits  = bw.total_bits;
     res.avg_bps     = input.empty() ? 0.0 : (double)bw.total_bits / input.size();
-    res.reset_count = reset_count;
-    res.progressive = std::move(progressive);
+    res.reset_count     = reset_count;
+    res.progressive     = std::move(progressive);
+    res.reset_positions = std::move(reset_positions);
     return res;
 }
 
@@ -165,7 +165,7 @@ std::vector<uint8_t> decode(const std::vector<uint8_t>& compressed,
         }
 
         if (!found) {
-            // Ordem -1: uniforme
+            // Ordem -1: uniforme sobre símbolos não excluídos
             bool ex[256] = {};
             for (int i = 0; i < 256; i++) ex[i] = excluded[i];
 
@@ -175,6 +175,7 @@ std::vector<uint8_t> decode(const std::vector<uint8_t>& compressed,
             int sym = ppm.decodeUniform(count, ex, use_reset);
             ac.remove(SymProb{ count, count + 1, denom });
 
+            // Token 256 sinaliza reset: reinicia o modelo e não emite byte
             if (sym == 256) {
                 ppm.reset();
                 continue;

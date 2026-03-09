@@ -3,19 +3,15 @@
 #include "constants.hpp"
 #include "bitio.hpp"
 
-// ─────────────────────────────────────────────────────────────────────────────
 // FRAÇÃO INTEIRA PARA A CODIFICAÇÃO ARITMÉTICA
 // Representa o intervalo [low_num/denom, high_num/denom)
-// ─────────────────────────────────────────────────────────────────────────────
 struct SymProb {
     uint64_t low_num;
     uint64_t high_num;
     uint64_t denom;
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
 // CODIFICADOR ARITMÉTICO
-// ─────────────────────────────────────────────────────────────────────────────
 struct ArithEncoder {
     uint64_t   low     = 0;
     uint64_t   high    = TOP_VALUE;
@@ -32,9 +28,7 @@ private:
     void emitBit(int b);
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
 // DECODIFICADOR ARITMÉTICO
-// ─────────────────────────────────────────────────────────────────────────────
 struct ArithDecoder {
     uint64_t   low   = 0;
     uint64_t   high  = TOP_VALUE;
